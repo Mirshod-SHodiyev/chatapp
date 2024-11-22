@@ -4,8 +4,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-
-        <title>{{ config('app.name', 'Laravel') }}</title>
+       <link rel="shortcut icon" href="{{ asset('assets/najot.png') }} type="image/x-icon">
+        <title>Chat App</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -14,8 +14,11 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans bg-[#edf2f7]  ">
-       <div id="ChatApp"></div>
+    <body class="font-sans bg-[#edf2f7]">
+        <div id="app" data-auth='@json(auth()->user())'>
+            <app></app>
+        </div>
+        
      
     </body>
 </html>
