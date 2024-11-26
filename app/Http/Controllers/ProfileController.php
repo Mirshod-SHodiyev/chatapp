@@ -9,11 +9,18 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
+
 class ProfileController extends Controller
 {
     /**
      * Display the user's profile form.
      */
+
+     public function show(): View
+    {
+        return view('chat.show');
+    }
+
     public function edit(Request $request): View
     {
         return view('profile.edit', [
@@ -56,5 +63,14 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+          
+    public function logout(Request $request)
+    {
+        Auth::logout();  // Logout the user
+        $request->session()->invalidate();  // Invalidate the session
+        $request->session()->regenerateToken();  // Regenerate CSRF token
+
+        return response()->json(['message' => 'User logged out successfully.']);
     }
 }

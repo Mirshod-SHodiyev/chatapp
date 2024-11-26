@@ -140,19 +140,26 @@ class ChatController extends Controller
      *
      * @return JsonResponse
      */
-    public function storeMessages(): JsonResponse
+    public function storeMessages(Request $request): JsonResponse
     {
-        // Yangi xabarni saqlash
-        $message = Chat::query()->create([
-            'sender_id' => request('sender_id'),
-            'receiver_id' => request('receiver_id'),
-            'message' => request('message'),
+        // Validate incoming message
+        $validated = $request->validate([
+            'message' => 'required|string',
+            'receiver_id' => 'required|integer',
         ]);
-
-        // Xabarni yuborish uchun jobni yuborish
-        SendMessage::dispatch($message);
-
-        // Yangi xabarni JSON formatida qaytarish
-        return response()->json($message);
+    
+        // Create and store the new message
+        $message = Chat::create([
+            'message' => $validated['message'],
+            'sender_id' => Auth::id(),
+            'receiver_id' => $validated['receiver_id'],
+        ]);
+    
+        // Dispatch event if needed
+        GotMessage::dispatch($message);
+    
+        // Return the newly created message as a JSON response
+        return response()->json($message, 201);
     }
+    
 }

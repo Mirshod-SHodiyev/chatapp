@@ -4,7 +4,6 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <link rel="shortcut icon" href="{{ asset('assets/najot.png') }}" type="image/x-icon">
 
         <title>Chat App</title>
 
@@ -16,10 +15,9 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans bg-[#edf2f7]">
-        <div id="app" data-auth='@json(auth()->user())'>
-            <app></app>
+        <div id="show" data-auth='@json(auth()->user())'>
+            
+            <show :user='@json(auth()->user())'></show> 
         </div>
-        
-     
     </body>
 </html>

@@ -11,10 +11,13 @@ Route::get('/', function () {
 
 
 Route::middleware('auth')->group(function () {
-    Route::get('/chat',[ChatController::class, 'index'])->name('chat.index');
+    Route::get('/chat',[ChatController::class, 'index'])->name('home');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/myprofile', [ProfileController::class, 'show']);
+    Route::post('/logout', [ProfileController::class, 'logout']);
+
 
 
     Route::get('/api/users', [UserController::class, 'index']);
