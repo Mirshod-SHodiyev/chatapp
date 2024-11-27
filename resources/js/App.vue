@@ -64,11 +64,12 @@
               </div>
             </div>
           </div>
-
+             
           <div class="overflow-y-auto max-h-64 h-[19rem] px-4">
             <div 
+
               v-for="message in messages" 
-              :key="message.id" 
+              :key="messages.id" 
               :class="{ 'justify-end': message.sender_id === auth.id }" 
               class="flex items-center mb-4"
             >
@@ -89,7 +90,7 @@
                 <p>{{ message.message }}</p>
                 <div class="text-right text-xs text-gray-500">{{ message.time }}</div>
               </div>
-              <!-- Foydalanuvchi o'zi (o'ngda) -->
+          
               <img 
                 v-if="message.sender_id === auth.id" 
                 :src="filelink('default.jpeg')" 
@@ -99,7 +100,7 @@
             </div>
           </div>
 
-          <div class="flex items-center bg-white rounded-bl-md rounded-br-md">
+          <div  class="flex items-center bg-white rounded-bl-md rounded-br-md">
             <input type="text" v-model="newMessage" @keyup.enter.prevent="sendMessage" placeholder="Type a message..." class="w-full p-2 rounded-md border border-gray-300 focus:outline-none focus:ring focus:border-blue-400">
             <button :disabled="!newMessage.trim()" @click="sendMessage" class="bg-blue-500 text-white px-4 py-2 rounded-md disabled:bg-gray-400 ml-2">Send</button>
           </div>
@@ -124,7 +125,7 @@ const props = defineProps({
 });
 
 const isDropdownOpen = ref(false);
-// Dropdown menyusini ochish va yopish
+
 const toggleDropdown = () => { isDropdownOpen.value = !isDropdownOpen.value; };
 const openProfile = () => { console.log("Profil ochildi!"); };
 
@@ -134,52 +135,58 @@ const user = ref({});
 const messages = ref([]);
 const newMessage = ref("");
 
-// Komponent yuklanganda foydalanuvchilarni olish
 onMounted(() => {
   axios.get('/api/users').then(response => {
     users.value = response.data.users;
   })
+  window.Echo.private('room.1')
+    .listen('GotMessage', (response) => {
+      messages.value.push(response.message);
+    });
 });
 
-// Xabarlarni olish
+
+
 const fetchMessages = (userId) => {
   axios.get(`/api/messages/${userId}`).then(response => {
     messages.value = response.data;
   }).catch(error => { console.error("Xabarlarni olishda xatolik:", error); });
 };
 
-// Foydalanuvchini tanlash va xabarlarni yuklash
+
+
 const selectUser = (selectedUser) => {
   user.value = selectedUser;
   isChatOpen.value = true;
   fetchMessages(selectedUser.id);
 };
 
-// Xabar yuborish
+
 const sendMessage = () => {
-  // Xabar bo'sh emasligini tekshirish
+  
   if (newMessage.value.trim()) {
-    // Xabarni yuborish
+    
     axios
       .post('/api/messages', {
-        sender_id: props.auth.id, // Yuboruvchi foydalanuvchi ID
-        receiver_id: user.value.id, // Qabul qiluvchi foydalanuvchi ID
-        message: newMessage.value, // Xabar matni
+        sender_id: props.auth.id, 
+        receiver_id: user.value.id, 
+        message: newMessage.value, 
       })
       .then((response) => {
-        // Yangi xabarni xabarlar ro'yxatiga qo'shish
+      
         messages.value.push(response.data);
-        // Xabar yuborilgandan so'ng inputni tozalash
         newMessage.value = '';
+        console.log("Xabar yuborildi:", response.data);
+         scrollToBottom();
       })
   }
 };
 
-// Rasmlar uchun to'g'ri yo'lni qaytarish
+
 const filelink = (file) => `/assets/images/${file}`;
 const router = useRouter();
 
-// Chiqish
+
 const logout = () => {
   console.log("Chiqish...");
 
