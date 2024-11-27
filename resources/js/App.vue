@@ -66,43 +66,42 @@
           </div>
 
           <div class="overflow-y-auto max-h-64 h-[19rem] px-4">
-  <div 
-    v-for="message in messages" 
-    :key="message.id" 
-    :class="{ 'justify-end': message.sender_id === auth.id }" 
-    class="flex items-center mb-4"
-  >
-      <!-- Foydalanuvchi xabari (chapda) -->
-      <img 
-        v-if="message.sender_id !== auth.id" 
-        :src="filelink('default.jpeg')" 
-        alt="User Avatar" 
-        class="w-6 h-6 rounded-full border-2 border-white mr-2"
-      >
-      <div 
-        :class="{ 
-          'bg-white': message.sender_id === auth.id, 
-          'bg-indigo-100': message.sender_id !== auth.id 
-        }" 
-        class="text-sm py-2 px-4 shadow rounded-md max-w-xs"
-      >
-        <p>{{ message.message }}</p>
-        <div class="text-right text-xs text-gray-500">{{ message.time }}</div>
-      </div>
-      <!-- Foydalanuvchi o'zi (o'ngda) -->
-      <img 
-        v-if="message.sender_id === auth.id" 
-        :src="filelink('default.jpeg')" 
-        alt="User Avatar" 
-        class="w-6 h-6 rounded-full border-2 border-white ml-2"
-      >
-    </div>
-  </div>
+            <div 
+              v-for="message in messages" 
+              :key="message.id" 
+              :class="{ 'justify-end': message.sender_id === auth.id }" 
+              class="flex items-center mb-4"
+            >
+              <!-- Foydalanuvchi xabari (chapda) -->
+              <img 
+                v-if="message.sender_id !== auth.id" 
+                :src="filelink('default.jpeg')" 
+                alt="User Avatar" 
+                class="w-6 h-6 rounded-full border-2 border-white mr-2"
+              >
+              <div 
+                :class="{ 
+                  'bg-white': message.sender_id === auth.id, 
+                  'bg-indigo-100': message.sender_id !== auth.id 
+                }" 
+                class="text-sm py-2 px-4 shadow rounded-md max-w-xs"
+              >
+                <p>{{ message.message }}</p>
+                <div class="text-right text-xs text-gray-500">{{ message.time }}</div>
+              </div>
+              <!-- Foydalanuvchi o'zi (o'ngda) -->
+              <img 
+                v-if="message.sender_id === auth.id" 
+                :src="filelink('default.jpeg')" 
+                alt="User Avatar" 
+                class="w-6 h-6 rounded-full border-2 border-white ml-2"
+              >
+            </div>
+          </div>
 
           <div class="flex items-center bg-white rounded-bl-md rounded-br-md">
             <input type="text" v-model="newMessage" @keyup.enter.prevent="sendMessage" placeholder="Type a message..." class="w-full p-2 rounded-md border border-gray-300 focus:outline-none focus:ring focus:border-blue-400">
-           <button :disabled="!newMessage.trim()" @click="sendMessage" class="bg-blue-500 text-white px-4 py-2 rounded-md disabled:bg-gray-400 ml-2">Send</button>
-
+            <button :disabled="!newMessage.trim()" @click="sendMessage" class="bg-blue-500 text-white px-4 py-2 rounded-md disabled:bg-gray-400 ml-2">Send</button>
           </div>
         </div>
         <div v-else class="flex items-center justify-center min-h-[19rem]">
@@ -125,6 +124,7 @@ const props = defineProps({
 });
 
 const isDropdownOpen = ref(false);
+// Dropdown menyusini ochish va yopish
 const toggleDropdown = () => { isDropdownOpen.value = !isDropdownOpen.value; };
 const openProfile = () => { console.log("Profil ochildi!"); };
 
@@ -134,65 +134,64 @@ const user = ref({});
 const messages = ref([]);
 const newMessage = ref("");
 
+// Komponent yuklanganda foydalanuvchilarni olish
+onMounted(() => {
+  axios.get('/api/users').then(response => {
+    users.value = response.data.users;
+  })
+});
 
-
+// Xabarlarni olish
 const fetchMessages = (userId) => {
   axios.get(`/api/messages/${userId}`).then(response => {
     messages.value = response.data;
-  }).catch(error => { console.error("Error fetching messages:", error); });
+  }).catch(error => { console.error("Xabarlarni olishda xatolik:", error); });
 };
 
+// Foydalanuvchini tanlash va xabarlarni yuklash
 const selectUser = (selectedUser) => {
   user.value = selectedUser;
   isChatOpen.value = true;
   fetchMessages(selectedUser.id);
 };
 
+// Xabar yuborish
 const sendMessage = () => {
-  
+  // Xabar bo'sh emasligini tekshirish
   if (newMessage.value.trim()) {
-   
+    // Xabarni yuborish
     axios
       .post('/api/messages', {
-        sender_id: props.auth.id, 
-        receiver_id: user.value.id, 
-        message: newMessage.value,
+        sender_id: props.auth.id, // Yuboruvchi foydalanuvchi ID
+        receiver_id: user.value.id, // Qabul qiluvchi foydalanuvchi ID
+        message: newMessage.value, // Xabar matni
       })
       .then((response) => {
+        // Yangi xabarni xabarlar ro'yxatiga qo'shish
         messages.value.push(response.data);
+        // Xabar yuborilgandan so'ng inputni tozalash
         newMessage.value = '';
       })
-      
-      
   }
 };
 
-
-
+// Rasmlar uchun to'g'ri yo'lni qaytarish
 const filelink = (file) => `/assets/images/${file}`;
 const router = useRouter();
+
+// Chiqish
 const logout = () => {
-  console.log("Logging out...");
+  console.log("Chiqish...");
 
   axios.post('/logout')  
     .then(response => {
-      console.log('User logged out:', response.data);
+      console.log('Foydalanuvchi tizimdan chiqdi:', response.data);
       router.push('/login');  
     })
     .catch(error => {
-      console.error("Logout error:", error);
+      console.error("Chiqishda xatolik:", error);
     });
-
-
-    
 };
- onMounted(() => {
-  fetchMessages();
-  window.Echo.private('room.1')
-    .listen('GotMessage', (response) => {
-        messages.value.push(response.message);
-    });
-});
 </script>
 
 <style scoped>

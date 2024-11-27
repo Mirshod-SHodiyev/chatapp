@@ -17,7 +17,7 @@
     </head>
     <body class="font-sans bg-[#edf2f7]">
         <div id="app" data-auth='@json(auth()->user())'>
-            <app></app>
+    
         </div>
         
      

@@ -10,6 +10,10 @@ Route::get('/', function () {
 });
 
 
+Route::get('/api/users', [UserController::class, 'index']);
+Route::get('/api/messages/{id}', [ChatController::class, 'getMessages']);
+Route::post('/api/messages', [ChatController::class, 'storeMessages']);
+
 Route::middleware('auth')->group(function () {
     Route::get('/chat',[ChatController::class, 'index'])->name('home');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -20,9 +24,6 @@ Route::middleware('auth')->group(function () {
 
 
 
-    Route::get('/api/users', [UserController::class, 'index']);
-    Route::get('/api/messages/{id}', [ChatController::class, 'getMessages']);
-    Route::post('/api/messages', [ChatController::class, 'storeMessages']);
 });
 
 require __DIR__.'/auth.php';

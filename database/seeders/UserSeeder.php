@@ -48,7 +48,7 @@ class UserSeeder extends Seeder
             'password' => bcrypt('dilshod123'),
             'avatar' => 'https://cdn-icons-png.flaticon.com/512/2922/2922570.png',
         ]);
-        foreach(range(1, 15) as $i) {
+        foreach(range(1, 5) as $i) {
             User::factory()->create();
             
         }

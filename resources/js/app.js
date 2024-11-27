@@ -4,6 +4,7 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import Show from './Show.vue';
 
+
 window.Alpine = Alpine;
 Alpine.start();
 const show = createApp(Show);

@@ -122,5 +122,10 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
-
+           
+      App\Providers\AppServiceProvider::class,
+      App\Providers\AuthServiceProvider::class,
+      App\Providers\EventServiceProvider::class,
+      App\Providers\RouteServiceProvider::class,
+      App\Providers\BroadcastServiceProvider::class
 ];
