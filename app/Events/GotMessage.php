@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Events;
 
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -11,10 +10,19 @@ use Illuminate\Queue\SerializesModels;
 class GotMessage implements ShouldBroadcast {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public function __construct() {
+    public $message;
+
+    public function __construct($message) {
+        $this->message = $message;
     }
 
     public function broadcastOn() {
-        return  new PrivateChannel("room.1");
+        return new PrivateChannel("room.1");
+    }
+
+    public function broadcastWith() {
+        return [
+            'message' => $this->message,
+        ];
     }
 }

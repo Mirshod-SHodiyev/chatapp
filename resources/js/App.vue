@@ -12,8 +12,8 @@
               <three-dots-icon class="w-6 h-6 cursor-pointer" @click="toggleDropdown"></three-dots-icon>
               <div v-if="isDropdownOpen" class="origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
                 <div class="py-1">
-                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 cursor-pointer" @click="openProfile">Profile</a>
-                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 cursor-pointer" @click="logout">Logout</a>
+                  <a href="/my-profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 cursor-pointer" @click="openProfile">Profile</a>
+                  <a href="logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 cursor-pointer" @click="logout">Logout</a>
                 </div>
               </div>
             </div>
@@ -114,6 +114,7 @@
 </template>
 
 <script setup>
+
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
@@ -127,7 +128,7 @@ const props = defineProps({
 const isDropdownOpen = ref(false);
 
 const toggleDropdown = () => { isDropdownOpen.value = !isDropdownOpen.value; };
-const openProfile = () => { console.log("Profil ochildi!"); };
+const openProfile = () => { router.push('/my-profile'); };
 
 const isChatOpen = ref(false);
 const users = ref([]);
@@ -140,12 +141,11 @@ onMounted(() => {
     users.value = response.data.users;
   })
   window.Echo.private('room.1')
-    .listen('GotMessage', (response) => {
-      messages.value.push(response.message);
+    .listen('GotMessage', (event) => {
+        console.log('New message:', event.message);
+        messages.value.push(event.message); 
     });
 });
-
-
 
 const fetchMessages = (userId) => {
   axios.get(`/api/messages/${userId}`).then(response => {
@@ -176,30 +176,26 @@ const sendMessage = () => {
       
         messages.value.push(response.data);
         newMessage.value = '';
-        console.log("Xabar yuborildi:", response.data);
-         scrollToBottom();
       })
   }
 };
 
-
 const filelink = (file) => `/assets/images/${file}`;
 const router = useRouter();
 
+function logout() {
+    axios.post('/logout') 
+        .then(() => {
+            window.location.href = '/login'; 
+        })
+        .catch(error => {
+            console.error('Logout failed:', error); 
+        });
+}
 
-const logout = () => {
-  console.log("Chiqish...");
-
-  axios.post('/logout')  
-    .then(response => {
-      console.log('Foydalanuvchi tizimdan chiqdi:', response.data);
-      router.push('/login');  
-    })
-    .catch(error => {
-      console.error("Chiqishda xatolik:", error);
-    });
-};
 </script>
 
 <style scoped>
+
+
 </style>

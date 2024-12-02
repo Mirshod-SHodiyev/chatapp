@@ -12,12 +12,14 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite(['resources/css/app.css', 'resources/js/app.js']) <!-- Vue.js va CSS uchun Vite link -->
     </head>
     <body class="font-sans bg-[#edf2f7]">
-        <div id="show" data-auth='@json(auth()->user())'>
-            
-            <show :user='@json(auth()->user())'></show> 
+        <div id="app" data-auth="{{ json_encode(auth()->user()) }}"> <!-- auth foydalanuvchini JSON formatda uzatish -->
+            <App /> <!-- Vue.js App komponentini chaqirish -->
         </div>
+
+        <!-- Vue.js ilovasini yuklash -->
+        <script src="{{ mix('js/app.js') }}"></script>
     </body>
 </html>

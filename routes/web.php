@@ -14,13 +14,14 @@ Route::get('/api/users', [UserController::class, 'index']);
 Route::get('/api/messages/{id}', [ChatController::class, 'getMessages']);
 Route::post('/api/messages', [ChatController::class, 'storeMessages']);
 
+Route::put('/api/users/{id}', [ProfileController::class, 'update']);
+Route::delete('/api/users/{id}', [ProfileController::class, 'destroy']);
+
+
 Route::middleware('auth')->group(function () {
     Route::get('/chat',[ChatController::class, 'index'])->name('home');
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::get('/myprofile', [ProfileController::class, 'show']);
-    Route::post('/logout', [ProfileController::class, 'logout']);
+    Route::get('/my-profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::post('/logout', [ProfileController::class, 'logout'])->name('logout');
 
 
 

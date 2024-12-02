@@ -21,56 +21,48 @@ class ProfileController extends Controller
         return view('chat.show');
     }
 
-    public function edit(Request $request): View
+    public function update(Request $request): RedirectResponse
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $request->user()->id],
         ]);
+    
+        $user = $request->user();
+        $user->name = $request->name;
+        $user->email = $request->email;
+    
+        $user->save();
+    
+        return response()->json(['message' => 'Profile updated successfully.']);
     }
-
-    /**
-     * Update the user's profile information.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
-    {
-        $request->user()->fill($request->validated());
-
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
-    }
-
-    /**
-     * Delete the user's account.
-     */
+    
     public function destroy(Request $request): RedirectResponse
     {
-        $request->validateWithBag('userDeletion', [
+        $request->validate([
             'password' => ['required', 'current_password'],
         ]);
-
+    
         $user = $request->user();
-
+    
         Auth::logout();
-
+    
         $user->delete();
-
+    
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
-        return Redirect::to('/');
+    
+        return response()->json(['message' => 'User account deleted successfully.']);
     }
+    
           
     public function logout(Request $request)
     {
-        Auth::logout();  // Logout the user
-        $request->session()->invalidate();  // Invalidate the session
-        $request->session()->regenerateToken();  // Regenerate CSRF token
-
-        return response()->json(['message' => 'User logged out successfully.']);
+        Auth::logout(); 
+        $request->session()->invalidate(); 
+        $request->session()->regenerateToken();  
+    
+        return response()->json(['message' => 'User logged out successfully.'], 200);
     }
+    
 }
