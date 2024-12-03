@@ -13,6 +13,8 @@ return new class extends Migration {
         Schema::create('room_user', function (Blueprint $table) {
             $table->foreignId('room_id')->constrained();
             $table->foreignId('user_id')->constrained();
+            $table->boolean('is_admin')->default(false);  
+
             $table->timestamps();
         });
     }

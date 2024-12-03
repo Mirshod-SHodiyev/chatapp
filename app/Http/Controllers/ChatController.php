@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Events\GotMessage;
-use App\Jobs\SendMessage;
 use App\Models\Chat;
 use App\Models\User;
 use Illuminate\Contracts\View\Factory;
@@ -17,149 +16,112 @@ class ChatController extends Controller
 {
     /**
      * Show the list of users and the latest messages.
-     *
-     * @return Application|Factory|View
      */
     public function index(): Application|Factory|View
     {
-        // Foydalanuvchilarni olish, hozirgi foydalanuvchini chiqarib tashlaydi
-        $users = User::where('id', '!=', auth()->id())->get();
+        $authId = auth()->id();
+
+        $users = User::where('id', '!=', $authId)->get();
+
         $messages = [];
 
         foreach ($users as $user) {
-            // Har bir foydalanuvchi bilan eng so'nggi xabarni olish
-            $latestMessage = Chat::where(function ($query) use ($user) {
-                $query->where('sender_id', auth()->id())
-                      ->where('receiver_id', $user->id);
-            })->orWhere(function ($query) use ($user) {
+            $latestMessage = Chat::where(function ($query) use ($authId, $user) {
+                $query->where('sender_id', $authId)
+                    ->where('receiver_id', $user->id);
+            })->orWhere(function ($query) use ($authId, $user) {
                 $query->where('sender_id', $user->id)
-                      ->where('receiver_id', auth()->id());
-            })->latest()->take(1)->first();
+                    ->where('receiver_id', $authId);
+            })->latest()->first();
 
-            // Har bir foydalanuvchi uchun eng so'nggi xabarni saqlash
             $messages[$user->id] = $latestMessage;
         }
 
-        // `chat` viewga foydalanuvchilar va xabarlar bilan birga qaytarish
         return view('chat.index', compact('users', 'messages'));
     }
 
     /**
      * Store a new message between two users.
-     *
-     * @param Request $request
-     * @param int $id
-     * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request, $id)
+    public function store(Request $request, int $id): \Illuminate\Http\RedirectResponse
     {
-        // So'rovni tekshirish
         $validated = $request->validate([
-            'message' => ['required', 'string'],
+            'message' => 'required|string|max:1000',
+            'room_id' => 'required|exists:rooms,id', 
         ]);
 
-        // Yangi xabarni saqlash
         $message = Chat::create([
             'message' => $validated['message'],
+            'room_id' => $validated['room_id'],
             'sender_id' => Auth::id(),
             'receiver_id' => $id,
         ]);
 
-        // Xabar yuborilishi bilan voqea chiqarish (masalan, real vaqtli bildirishnomalar)
         GotMessage::dispatch($message);
 
-        // Muvaffaqiyatli yuborilganligi haqida qaytish
         return back()->with('success', 'Message sent.');
     }
 
     /**
      * Show the chat with a specific user.
-     *
-     * @param string $id
-     * @return \Illuminate\Contracts\View\View
      */
-    public function show(string $id)
+    public function show(string $id): View
     {
-        // Foydalanuvchini olish
-        $user = User::find($id);
+        $authId = Auth::id();
+        $user = User::findOrFail($id);
 
-        // Agar foydalanuvchi topilmasa, 404 xatosini ko'rsatish
-        if (!$user) {
-            abort(404);
-        }
+        
+        $messages = Chat::where(function ($query) use ($authId, $id) {
+            $query->where('sender_id', $authId)
+                ->where('receiver_id', $id);
+        })->orWhere(function ($query) use ($authId, $id) {
+            $query->where('sender_id', $id)
+                ->where('receiver_id', $authId);
+        })->get();
 
-        // Hozirgi foydalanuvchi va tanlangan foydalanuvchi o'rtasidagi barcha xabarlarni olish
-        $messages = Chat::query()
-            ->where(function ($query) use ($user) {
-                $query->where('sender_id', Auth::id())
-                      ->where('receiver_id', $user->id);
-            })
-            ->orWhere(function ($query) use ($user) {
-                $query->where('sender_id', $user->id)
-                      ->where('receiver_id', Auth::id());
-            })
-            ->get();
+        $users = User::where('id', '!=', $authId)->get();
 
-        // Barcha foydalanuvchilarni olish (hozirgi foydalanuvchini chiqarib tashlaydi)
-        $users = User::where('id', '!=', Auth::id())->get();
-
-        // `chat` viewga foydalanuvchi, xabarlar va boshqa foydalanuvchilar bilan birga qaytarish
-        return view('chat', ['user' => $user, 'messages' => $messages, 'users' => $users]);
+        return view('chat', compact('user', 'messages', 'users'));
     }
 
     /**
      * Get all messages between the current user and a specific user as JSON.
-     *
-     * @param int $id
-     * @return JsonResponse
      */
-    public function getMessages($id): JsonResponse
+    public function getMessages(int $id): JsonResponse
     {
-        $user = User::query()->find($id);
-        $auth = Auth::id();
-        $partner = $user->id;
+        $authId = Auth::id();
 
-        // Xabarlarni olish
-        $messages = Chat::query()
-            ->where(function ($query) use ($auth, $partner) {
-                $query->where('sender_id', $auth)
-                    ->where('receiver_id', $partner);
-            })
-            ->orWhere(function ($query) use ($auth, $partner) {
-                $query->where('sender_id', $partner)
-                    ->where('receiver_id', $auth);
-            })
-            ->with(['sender', 'receiver'])
-            ->get();
+        $messages = Chat::where(function ($query) use ($authId, $id) {
+            $query->where('sender_id', $authId)
+                ->where('receiver_id', $id);
+        })->orWhere(function ($query) use ($authId, $id) {
+            $query->where('sender_id', $id)
+                ->where('receiver_id', $authId);
+        })->with(['sender', 'receiver'])->get();
 
         return response()->json($messages);
     }
 
     /**
      * Store a new message via AJAX and return as JSON.
-     *
-     * @return JsonResponse
      */
     public function storeMessages(Request $request): JsonResponse
     {
-        // Validate incoming message
         $validated = $request->validate([
-            'message' => 'required|string',
-            'receiver_id' => 'required|integer',
+            'message' => 'required|string|max:1000',
+            'receiver_id' => 'required|exists:users,id',
+            'room_id' => 'required|exists:rooms,id', 
         ]);
-    
-        // Create and store the new message
+
         $message = Chat::create([
             'message' => $validated['message'],
+            'room_id' => $validated['room_id'],
             'sender_id' => Auth::id(),
             'receiver_id' => $validated['receiver_id'],
         ]);
-    
-        // Dispatch event if needed
+
         GotMessage::dispatch($message);
-    
-        // Return the newly created message as a JSON response
+
         return response()->json($message, 201);
     }
-    
 }

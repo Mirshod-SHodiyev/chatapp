@@ -7,20 +7,27 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class GotMessage implements ShouldBroadcast {
+class GotMessage implements ShouldBroadcast
+{
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $message;
+    public $roomId;  
 
-    public function __construct($message) {
+    public function __construct($message, $roomId)
+    {
         $this->message = $message;
+        $this->roomId = $roomId;
     }
 
-    public function broadcastOn() {
-        return new PrivateChannel("room.1");
+    public function broadcastOn()
+    {
+        
+        return new PrivateChannel("room.{$this->roomId}");
     }
 
-    public function broadcastWith() {
+    public function broadcastWith()
+    {
         return [
             'message' => $this->message,
         ];

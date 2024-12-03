@@ -126,7 +126,6 @@ const props = defineProps({
 });
 
 const isDropdownOpen = ref(false);
-
 const toggleDropdown = () => { isDropdownOpen.value = !isDropdownOpen.value; };
 const openProfile = () => { router.push('/my-profile'); };
 
@@ -135,25 +134,33 @@ const users = ref([]);
 const user = ref({});
 const messages = ref([]);
 const newMessage = ref("");
+const currentRoom = ref(null);
 
 onMounted(() => {
   axios.get('/api/users').then(response => {
     users.value = response.data.users;
-  })
-  window.Echo.private('room.1')
+  });
+
+
+  window.Echo.private('room.' + props.auth.id)
     .listen('GotMessage', (event) => {
         console.log('New message:', event.message);
-        messages.value.push(event.message); 
+        messages.value.push(event.message);
     });
 });
+
 
 const fetchMessages = (userId) => {
   axios.get(`/api/messages/${userId}`).then(response => {
     messages.value = response.data;
+    currentRoom.value = `room.${userId}`; 
+    window.Echo.private(currentRoom.value)
+      .listen('GotMessage', (event) => {
+        console.log('New message:', event.message);
+        messages.value.push(event.message);
+      });
   }).catch(error => { console.error("Xabarlarni olishda xatolik:", error); });
 };
-
-
 
 const selectUser = (selectedUser) => {
   user.value = selectedUser;
@@ -161,22 +168,18 @@ const selectUser = (selectedUser) => {
   fetchMessages(selectedUser.id);
 };
 
-
 const sendMessage = () => {
   
   if (newMessage.value.trim()) {
-    
-    axios
-      .post('/api/messages', {
-        sender_id: props.auth.id, 
-        receiver_id: user.value.id, 
-        message: newMessage.value, 
-      })
-      .then((response) => {
+    axios.post('/api/messages', {
+      sender_id: props.auth.id,
+      receiver_id: user.value.id,
+      message: newMessage.value,
+    }).then((response) => {
+      messages.value.push(response.data);
+      newMessage.value = '';
       
-        messages.value.push(response.data);
-        newMessage.value = '';
-      })
+    });
   }
 };
 
@@ -184,13 +187,13 @@ const filelink = (file) => `/assets/images/${file}`;
 const router = useRouter();
 
 function logout() {
-    axios.post('/logout') 
-        .then(() => {
-            window.location.href = '/login'; 
-        })
-        .catch(error => {
-            console.error('Logout failed:', error); 
-        });
+  axios.post('/logout')
+    .then(() => {
+      window.location.href = '/login';
+    })
+    .catch(error => {
+      console.error('Logout failed:', error);
+    });
 }
 
 </script>

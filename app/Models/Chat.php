@@ -10,6 +10,7 @@ class Chat extends Model
     protected $table = 'chats';
 
     protected $fillable = [
+         'room_id',
         'sender_id',
         'receiver_id',
         'message',
@@ -30,6 +31,10 @@ class Chat extends Model
         return $this->belongsTo(User::class, 'receiver_id');
     }
 
+      public function room(): BelongsTo
+    {
+        return $this->belongsTo(Room::class, 'room_id');
+    }
     public function getTimeAttribute(): string
     {
         return date(

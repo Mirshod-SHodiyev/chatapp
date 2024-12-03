@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <link rel="shortcut icon" href="{{ asset('assets/najot.png') }}" type="image/x-icon">
 
         <title>Chat App</title>
 
@@ -12,14 +13,13 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js']) <!-- Vue.js va CSS uchun Vite link -->
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans bg-[#edf2f7]">
-        <div id="app" data-auth="{{ json_encode(auth()->user()) }}"> <!-- auth foydalanuvchini JSON formatda uzatish -->
-            <App /> <!-- Vue.js App komponentini chaqirish -->
+        <div id="profile" data-auth='@json(auth()->user())'>
+    
         </div>
-
-        <!-- Vue.js ilovasini yuklash -->
-        <script src="{{ mix('js/app.js') }}"></script>
+        
+     
     </body>
 </html>

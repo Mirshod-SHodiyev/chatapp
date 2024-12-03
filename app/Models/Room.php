@@ -10,6 +10,7 @@ class Room extends Model
 
     protected $fillable = [
         'type',
+        
     ];
     public function users()
     {
